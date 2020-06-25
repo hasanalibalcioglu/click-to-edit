@@ -1,6 +1,6 @@
 {
   "name": "click-to-edit",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Simple click to edit component for Vue.",
   "main": "dist/click-to-edit.ssr.js",
   "browser": "dist/click-to-edit.esm.js",
@@ -22,7 +22,10 @@
     "url": "https://github.com/hasanalibalcioglu/click-to-edit.git"
   },
   "author": "Hasan Ali Balcioglu <h.alibalcioglu@gmail.com> (http://h3x.online/)",
-  "keywords": ["click to edit", "vue"],
+  "keywords": [
+    "click to edit",
+    "vue"
+  ],
   "dependencies": {},
   "devDependencies": {
     "@babel/core": "^7.9.0",
