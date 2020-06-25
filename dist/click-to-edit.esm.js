@@ -11,6 +11,10 @@ var script = {
     content: {
       default: 'text'
     },
+    required: {
+      type: Boolean,
+      default: false
+    },
     inputType: {
       type: String,
       default: 'text'
@@ -38,6 +42,12 @@ var script = {
 
     endEditing() {
       this.editing = false;
+
+      if (this.text == '' && this.required) {
+        this.text = this.content;
+        return;
+      }
+
       this.callbackFn(this.text);
     }
 

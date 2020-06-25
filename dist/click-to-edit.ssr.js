@@ -11,6 +11,10 @@ var script = {
     content: {
       default: 'text'
     },
+    required: {
+      type: Boolean,
+      default: false
+    },
     inputType: {
       type: String,
       default: 'text'
@@ -35,6 +39,12 @@ var script = {
     },
     endEditing: function endEditing() {
       this.editing = false;
+
+      if (this.text == '' && this.required) {
+        this.text = this.content;
+        return;
+      }
+
       this.callbackFn(this.text);
     }
   }
@@ -136,7 +146,7 @@ var __vue_inject_styles__ = undefined;
 var __vue_scope_id__ = undefined;
 /* module identifier */
 
-var __vue_module_identifier__ = "data-v-923dc116";
+var __vue_module_identifier__ = "data-v-de0486f4";
 /* functional template */
 
 var __vue_is_functional_template__ = false;
