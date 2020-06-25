@@ -17,6 +17,12 @@
     "build:es": "cross-env NODE_ENV=production rollup --config build/rollup.config.js --format es",
     "build:unpkg": "cross-env NODE_ENV=production rollup --config build/rollup.config.js --format iife"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hasanalibalcioglu/click-to-edit.git"
+  },
+  "author": "Hasan Ali Balcioglu <h.alibalcioglu@gmail.com> (http://h3x.online/)",
+  "keywords": ["click to edit", "vue"],
   "dependencies": {},
   "devDependencies": {
     "@babel/core": "^7.9.0",

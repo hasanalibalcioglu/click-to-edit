@@ -26,6 +26,10 @@ The content of input will be passed as parameter
 `<click-to-edit content='Here is the content to be edited!' :callback-fn='myCustomFunction' />`
 
   
+Required field:  
+Even though `false` is static, we need v-bind (**:**) to tell Vue that this is a JavaScript expression rather than a string. 
+This will reset the input to content variable if it's blank.
+`<click-to-edit content='Here is the content to be edited!' :required='true'  input-type='text' />`
 
 Choose the type of input for editing:
 
