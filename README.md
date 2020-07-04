@@ -11,36 +11,94 @@ I needed something simple as this component and here it is.
 
 Define the content of editable box:
 
-`<click-to-edit content='Here is the content to be edited!' />`
+`<click-to-edit v-model='testVariable' />`
 
+## Callback
+The content of input will be passed as parameter:
+```vue
+<click-to-edit v-model='testVariable' @change="updateDB" />
+```
 
-How do you pass the callback function:
-
-The content of input will be passed as parameter
-
-    //This is the callback function to be used in the end of editing action.
-    myCustomFunction(editedContent){
-	    console.log(editedContent)
+## Validation
+```vue 
+<click-to-edit v-model='testVariable' @change="updateDB" :validator="customValidator"/>
+```
+This will be changed with default validation function which is:
+```javascript 
+validator: {
+    type: Function,
+    default: function () {
+        if(this.text === '' && this.options.required){
+            this.reset();
+            return false;
+        }
+        return true;
     }
+}
+```
+## Options
+```javascript 
+options: {
+    type: 'text', // type of the editor input
+    // min: 1, // attributes for type number input
+    // max: 5, // attributes for type number input
+    // step: 1, // attributes for type number input
+    // required: true // No need if you use your own validator function
+}
+```
+```vue 
+<click-to-edit v-model='testVariable' @change="updateDB" :validator="customValidator"  :options="options"/>
+```
 
-`<click-to-edit content='Here is the content to be edited!' :callback-fn='myCustomFunction' />`
+### General Look Of Usage
+```vue 
+export default Vue.extend({
+  name: 'ServeDev',
+  components: {
+    ClickToEdit,
+  },
+  data(){
+    return {
+      testVariable: "Here is the text to be edited!",
+      options: {
+        type: 'text',
+        // min: 1,
+        // max: 5,
+        // step: 1,
+        // required: true // No need if you use your own validator function
+      }
+    }
+  },
+  methods:{
+    updateDB(val){
+      console.log(val);
+      this.testVariable = val;
+      // and some requests
+    },
+    customValidator(message, validation, reset){
+      if (message === 'not accepted things' || message === ''){
+        reset(); // Reset the input value to last valid state
+        validation('Try something else!'); // Validation message to be shown bellow input
+        return false;
+      }
+      return true;
+    }
+  }
+});
+</script>
 
-  
-Required field:  
-Even though `false` is static, we need v-bind (**:**) to tell Vue that this is a JavaScript expression rather than a string. 
-This will reset the input to content variable if it's blank.
-`<click-to-edit content='Here is the content to be edited!' :required='true'  input-type='text' />`
-
-Choose the type of input for editing:
-
-`<click-to-edit content='Here is the content to be edited!' input-type='text' />`
-
-Numeric example:
-
-`<click-to-edit content='2020' input-type='number' />`
-
+<template>
+  <div id="app">
+    <click-to-edit v-model="testVariable" @change="updateDB" :validator="customValidator" :options="options"></click-to-edit>
+  </div>
+</template>
+```
 ## Styling
-CSS selector of input:
-
-> .click-to-edit > input
+CSS selectors:
+```
+.click-to-edit input
+.click-to-edit input.validation-failed
+.validation-message
+.content
+```
 
