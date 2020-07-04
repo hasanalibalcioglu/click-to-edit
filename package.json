@@ -1,6 +1,6 @@
 {
   "name": "click-to-edit",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Simple click to edit component for Vue.",
   "main": "dist/click-to-edit.ssr.js",
   "browser": "dist/click-to-edit.esm.js",
