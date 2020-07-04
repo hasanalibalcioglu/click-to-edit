@@ -5,30 +5,58 @@
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 var script = {
   name: "ClickToEdit",
   props: {
     content: {
       default: 'text'
     },
-    required: {
-      type: Boolean,
-      default: false
+    options: {
+      type: Object,
+      default: function () {
+        return {
+          type: 'number',
+          min: false,
+          max: false,
+          step: false,
+          required: false
+        };
+      }
     },
-    inputType: {
-      type: String,
-      default: 'text'
-    },
-    callbackFn: {
+    validator: {
       type: Function,
-      default: function () {}
+      default: function () {
+        if (this.text === '' && this.options.required) {
+          this.reset();
+          return false;
+        }
+
+        return true;
+      }
     }
+  },
+  model: {
+    prop: 'content',
+    event: 'change'
   },
 
   data() {
     return {
       editing: false,
-      text: this.content
+      text: this.content,
+      validationMessage: false
     };
   },
 
@@ -41,14 +69,31 @@ var script = {
     },
 
     endEditing() {
-      this.editing = false;
+      let validation = this.validator(this.text, this.show, this.reset);
 
-      if (this.text == '' && this.required) {
-        this.text = this.content;
+      if (!validation) {
+        this.validationFailed = true;
         return;
       }
 
-      this.callbackFn(this.text);
+      this.editing = false;
+      this.validationFailed = false;
+      this.validationMessage = false;
+      if (this.text !== this.content) this.$emit('change', this.text);
+    },
+
+    reset() {
+      this.text = this.content;
+    },
+
+    show(message) {
+      this.validationMessage = message;
+    }
+
+  },
+  watch: {
+    content(val) {
+      this.text = val;
     }
 
   }
@@ -129,6 +174,59 @@ function normalizeComponent(template, style, script, scopeId, isFunctionalTempla
     return script;
 }
 
+const isOldIE = typeof navigator !== 'undefined' &&
+    /msie [6-9]\\b/.test(navigator.userAgent.toLowerCase());
+function createInjector(context) {
+    return (id, style) => addStyle(id, style);
+}
+let HEAD;
+const styles = {};
+function addStyle(id, css) {
+    const group = isOldIE ? css.media || 'default' : id;
+    const style = styles[group] || (styles[group] = { ids: new Set(), styles: [] });
+    if (!style.ids.has(id)) {
+        style.ids.add(id);
+        let code = css.source;
+        if (css.map) {
+            // https://developer.chrome.com/devtools/docs/javascript-debugging
+            // this makes source maps inside style tags work properly in Chrome
+            code += '\n/*# sourceURL=' + css.map.sources[0] + ' */';
+            // http://stackoverflow.com/a/26603875
+            code +=
+                '\n/*# sourceMappingURL=data:application/json;base64,' +
+                    btoa(unescape(encodeURIComponent(JSON.stringify(css.map)))) +
+                    ' */';
+        }
+        if (!style.element) {
+            style.element = document.createElement('style');
+            style.element.type = 'text/css';
+            if (css.media)
+                style.element.setAttribute('media', css.media);
+            if (HEAD === undefined) {
+                HEAD = document.head || document.getElementsByTagName('head')[0];
+            }
+            HEAD.appendChild(style.element);
+        }
+        if ('styleSheet' in style.element) {
+            style.styles.push(code);
+            style.element.styleSheet.cssText = style.styles
+                .filter(Boolean)
+                .join('\n');
+        }
+        else {
+            const index = style.ids.size - 1;
+            const textNode = document.createTextNode(code);
+            const nodes = style.element.childNodes;
+            if (nodes[index])
+                style.element.removeChild(nodes[index]);
+            if (nodes.length)
+                style.element.insertBefore(textNode, nodes[index]);
+            else
+                style.element.appendChild(textNode);
+        }
+    }
+}
+
 /* script */
 const __vue_script__ = script;
 /* template */
@@ -142,7 +240,17 @@ var __vue_render__ = function () {
 
   return _c('div', {
     staticClass: "click-to-edit"
-  }, [_vm.inputType === 'checkbox' && _vm.editing ? _c('input', {
+  }, [_vm.validationMessage && _vm.validationFailed ? _c('div', {
+    staticClass: "validation-message"
+  }, [_vm._v(_vm._s(_vm.validationMessage))]) : _vm._e(), _vm._v(" "), !_vm.editing ? _c('div', {
+    staticClass: "edit-trigger content",
+    on: {
+      "click": function ($event) {
+        $event.preventDefault();
+        return _vm.startEditing($event);
+      }
+    }
+  }, [_vm._v(_vm._s(_vm.text))]) : _vm._e(), _vm._v(" "), _vm.options.type === 'checkbox' && _vm.editing ? _c('input', {
     directives: [{
       name: "model",
       rawName: "v-model",
@@ -150,8 +258,13 @@ var __vue_render__ = function () {
       expression: "text"
     }],
     ref: "editor",
+    class: _vm.validationMessage && 'validation-failed',
     attrs: {
       "id": "click-editor",
+      "min": _vm.options.min,
+      "max": _vm.options.max,
+      "step": _vm.options.step,
+      "required": _vm.options.required,
       "type": "checkbox"
     },
     domProps: {
@@ -178,7 +291,7 @@ var __vue_render__ = function () {
         }
       }
     }
-  }) : _vm.inputType === 'radio' && _vm.editing ? _c('input', {
+  }) : _vm.options.type === 'radio' && _vm.editing ? _c('input', {
     directives: [{
       name: "model",
       rawName: "v-model",
@@ -186,8 +299,13 @@ var __vue_render__ = function () {
       expression: "text"
     }],
     ref: "editor",
+    class: _vm.validationMessage && 'validation-failed',
     attrs: {
       "id": "click-editor",
+      "min": _vm.options.min,
+      "max": _vm.options.max,
+      "step": _vm.options.step,
+      "required": _vm.options.required,
       "type": "radio"
     },
     domProps: {
@@ -207,9 +325,14 @@ var __vue_render__ = function () {
       expression: "text"
     }],
     ref: "editor",
+    class: _vm.validationMessage && 'validation-failed',
     attrs: {
       "id": "click-editor",
-      "type": _vm.inputType
+      "min": _vm.options.min,
+      "max": _vm.options.max,
+      "step": _vm.options.step,
+      "required": _vm.options.required,
+      "type": _vm.options.type
     },
     domProps: {
       "value": _vm.text
@@ -224,31 +347,30 @@ var __vue_render__ = function () {
         _vm.text = $event.target.value;
       }
     }
-  }) : _vm._e(), _vm._v(" "), !_vm.editing ? _c('div', {
-    on: {
-      "click": function ($event) {
-        $event.preventDefault();
-        return _vm.startEditing($event);
-      }
-    }
-  }, [_vm._v(_vm._s(_vm.text))]) : _vm._e()]);
+  }) : _vm._e()]);
 };
 
 var __vue_staticRenderFns__ = [];
 /* style */
 
-const __vue_inject_styles__ = undefined;
+const __vue_inject_styles__ = function (inject) {
+  if (!inject) return;
+  inject("data-v-6782cfb6_0", {
+    source: ".click-to-edit input[data-v-6782cfb6]{min-width:150px;min-height:30px;border:1px solid #c2c2c2;border-radius:8px;padding-left:10px}.click-to-edit input.validation-failed[data-v-6782cfb6]{border-color:red}.validation-message[data-v-6782cfb6]{color:red;font-size:.7rem;margin-bottom:5px}.content[data-v-6782cfb6]{min-height:30px;line-height:15px;min-width:150px}",
+    map: undefined,
+    media: undefined
+  });
+};
 /* scoped */
 
-const __vue_scope_id__ = undefined;
+
+const __vue_scope_id__ = "data-v-6782cfb6";
 /* module identifier */
 
 const __vue_module_identifier__ = undefined;
 /* functional template */
 
 const __vue_is_functional_template__ = false;
-/* style inject */
-
 /* style inject SSR */
 
 /* style inject shadow dom */
@@ -256,7 +378,7 @@ const __vue_is_functional_template__ = false;
 const __vue_component__ = /*#__PURE__*/normalizeComponent({
   render: __vue_render__,
   staticRenderFns: __vue_staticRenderFns__
-}, __vue_inject_styles__, __vue_script__, __vue_scope_id__, __vue_is_functional_template__, __vue_module_identifier__, false, undefined, undefined, undefined);
+}, __vue_inject_styles__, __vue_script__, __vue_scope_id__, __vue_is_functional_template__, __vue_module_identifier__, false, createInjector, undefined, undefined);
 
 // Import vue component
 

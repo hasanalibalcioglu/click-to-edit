@@ -5,29 +5,57 @@
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 var script = {
   name: "ClickToEdit",
   props: {
     content: {
       default: 'text'
     },
-    required: {
-      type: Boolean,
-      default: false
+    options: {
+      type: Object,
+      default: function _default() {
+        return {
+          type: 'number',
+          min: false,
+          max: false,
+          step: false,
+          required: false
+        };
+      }
     },
-    inputType: {
-      type: String,
-      default: 'text'
-    },
-    callbackFn: {
+    validator: {
       type: Function,
-      default: function _default() {}
+      default: function _default() {
+        if (this.text === '' && this.options.required) {
+          this.reset();
+          return false;
+        }
+
+        return true;
+      }
     }
+  },
+  model: {
+    prop: 'content',
+    event: 'change'
   },
   data: function data() {
     return {
       editing: false,
-      text: this.content
+      text: this.content,
+      validationMessage: false
     };
   },
   methods: {
@@ -38,14 +66,28 @@ var script = {
       });
     },
     endEditing: function endEditing() {
-      this.editing = false;
+      var validation = this.validator(this.text, this.show, this.reset);
 
-      if (this.text == '' && this.required) {
-        this.text = this.content;
+      if (!validation) {
+        this.validationFailed = true;
         return;
       }
 
-      this.callbackFn(this.text);
+      this.editing = false;
+      this.validationFailed = false;
+      this.validationMessage = false;
+      if (this.text !== this.content) this.$emit('change', this.text);
+    },
+    reset: function reset() {
+      this.text = this.content;
+    },
+    show: function show(message) {
+      this.validationMessage = message;
+    }
+  },
+  watch: {
+    content: function content(val) {
+      this.text = val;
     }
   }
 };function normalizeComponent(template, style, script, scopeId, isFunctionalTemplate, moduleIdentifier /* server only */, shadowMode, createInjector, createInjectorSSR, createInjectorShadow) {
@@ -121,6 +163,46 @@ var script = {
         }
     }
     return script;
+}function createInjectorSSR(context) {
+    if (!context && typeof __VUE_SSR_CONTEXT__ !== 'undefined') {
+        context = __VUE_SSR_CONTEXT__;
+    }
+    if (!context)
+        return () => { };
+    if (!('styles' in context)) {
+        context._styles = context._styles || {};
+        Object.defineProperty(context, 'styles', {
+            enumerable: true,
+            get: () => context._renderStyles(context._styles)
+        });
+        context._renderStyles = context._renderStyles || renderStyles;
+    }
+    return (id, style) => addStyle(id, style, context);
+}
+function addStyle(id, css, context) {
+    const group =  css.media || 'default' ;
+    const style = context._styles[group] || (context._styles[group] = { ids: [], css: '' });
+    if (!style.ids.includes(id)) {
+        style.media = css.media;
+        style.ids.push(id);
+        let code = css.source;
+        style.css += code + '\n';
+    }
+}
+function renderStyles(styles) {
+    let css = '';
+    for (const key in styles) {
+        const style = styles[key];
+        css +=
+            '<style data-vue-ssr-id="' +
+                Array.from(style.ids).join(' ') +
+                '"' +
+                (style.media ? ' media="' + style.media + '"' : '') +
+                '>' +
+                style.css +
+                '</style>';
+    }
+    return css;
 }/* script */
 var __vue_script__ = script;
 /* template */
@@ -134,32 +216,36 @@ var __vue_render__ = function __vue_render__() {
 
   return _c('div', {
     staticClass: "click-to-edit"
-  }, [_vm._ssrNode((_vm.inputType === 'checkbox' && _vm.editing ? "<input id=\"click-editor\" type=\"checkbox\"" + _vm._ssrAttr("checked", Array.isArray(_vm.text) ? _vm._i(_vm.text, null) > -1 : _vm.text) + ">" : _vm.inputType === 'radio' && _vm.editing ? "<input id=\"click-editor\" type=\"radio\"" + _vm._ssrAttr("checked", _vm._q(_vm.text, null)) + ">" : _vm.editing ? "<input id=\"click-editor\"" + _vm._ssrAttr("type", _vm.inputType) + _vm._ssrAttr("value", _vm.text) + ">" : "<!---->") + " " + (!_vm.editing ? "<div>" + _vm._ssrEscape(_vm._s(_vm.text)) + "</div>" : "<!---->"))]);
+  }, [_vm._ssrNode((_vm.validationMessage && _vm.validationFailed ? "<div class=\"validation-message\" data-v-6782cfb6>" + _vm._ssrEscape(_vm._s(_vm.validationMessage)) + "</div>" : "<!---->") + " " + (!_vm.editing ? "<div class=\"edit-trigger content\" data-v-6782cfb6>" + _vm._ssrEscape(_vm._s(_vm.text)) + "</div>" : "<!---->") + " " + (_vm.options.type === 'checkbox' && _vm.editing ? "<input id=\"click-editor\"" + _vm._ssrAttr("min", _vm.options.min) + _vm._ssrAttr("max", _vm.options.max) + _vm._ssrAttr("step", _vm.options.step) + _vm._ssrAttr("required", _vm.options.required) + " type=\"checkbox\"" + _vm._ssrAttr("checked", Array.isArray(_vm.text) ? _vm._i(_vm.text, null) > -1 : _vm.text) + _vm._ssrClass(null, _vm.validationMessage && 'validation-failed') + " data-v-6782cfb6>" : _vm.options.type === 'radio' && _vm.editing ? "<input id=\"click-editor\"" + _vm._ssrAttr("min", _vm.options.min) + _vm._ssrAttr("max", _vm.options.max) + _vm._ssrAttr("step", _vm.options.step) + _vm._ssrAttr("required", _vm.options.required) + " type=\"radio\"" + _vm._ssrAttr("checked", _vm._q(_vm.text, null)) + _vm._ssrClass(null, _vm.validationMessage && 'validation-failed') + " data-v-6782cfb6>" : _vm.editing ? "<input id=\"click-editor\"" + _vm._ssrAttr("min", _vm.options.min) + _vm._ssrAttr("max", _vm.options.max) + _vm._ssrAttr("step", _vm.options.step) + _vm._ssrAttr("required", _vm.options.required) + _vm._ssrAttr("type", _vm.options.type) + _vm._ssrAttr("value", _vm.text) + _vm._ssrClass(null, _vm.validationMessage && 'validation-failed') + " data-v-6782cfb6>" : "<!---->"))]);
 };
 
 var __vue_staticRenderFns__ = [];
 /* style */
 
-var __vue_inject_styles__ = undefined;
+var __vue_inject_styles__ = function __vue_inject_styles__(inject) {
+  if (!inject) return;
+  inject("data-v-6782cfb6_0", {
+    source: ".click-to-edit input[data-v-6782cfb6]{min-width:150px;min-height:30px;border:1px solid #c2c2c2;border-radius:8px;padding-left:10px}.click-to-edit input.validation-failed[data-v-6782cfb6]{border-color:red}.validation-message[data-v-6782cfb6]{color:red;font-size:.7rem;margin-bottom:5px}.content[data-v-6782cfb6]{min-height:30px;line-height:15px;min-width:150px}",
+    map: undefined,
+    media: undefined
+  });
+};
 /* scoped */
 
-var __vue_scope_id__ = undefined;
+
+var __vue_scope_id__ = "data-v-6782cfb6";
 /* module identifier */
 
-var __vue_module_identifier__ = "data-v-de0486f4";
+var __vue_module_identifier__ = "data-v-6782cfb6";
 /* functional template */
 
 var __vue_is_functional_template__ = false;
-/* style inject */
-
-/* style inject SSR */
-
 /* style inject shadow dom */
 
 var __vue_component__ = /*#__PURE__*/normalizeComponent({
   render: __vue_render__,
   staticRenderFns: __vue_staticRenderFns__
-}, __vue_inject_styles__, __vue_script__, __vue_scope_id__, __vue_is_functional_template__, __vue_module_identifier__, false, undefined, undefined, undefined);// Import vue component
+}, __vue_inject_styles__, __vue_script__, __vue_scope_id__, __vue_is_functional_template__, __vue_module_identifier__, false, undefined, createInjectorSSR, undefined);// Import vue component
 
 var install = function installClickToEdit(Vue) {
   if (install.installed) return;

@@ -52,6 +52,10 @@ options: {
 
 ### General Look Of Usage
 ```vue 
+<script>
+import Vue from 'vue';
+import ClickToEdit from 'click-to-edit';
+
 export default Vue.extend({
   name: 'ServeDev',
   components: {
